@@ -1,3 +1,7 @@
+<?php session_start(); 
+$cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0; 
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,11 +44,11 @@
                 <option>BN</option>
             </select>
 
-            <button class="cart-btn">
+          <button class="cart-btn" onclick="location.href='cart.php'">
                 <i class="fas fa-shopping-cart"></i>
                 <span>Cart</span>
-                <span class="cart-count">0</span>
-            </button>
+                <span class="cart-count"><?= $cart_count ?></span>
+          </button>
 
             <a href="Signin.php" class="signin-btn" >
                 <i class="fas fa-user-circle"></i>
