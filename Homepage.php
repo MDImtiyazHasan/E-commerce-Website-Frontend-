@@ -128,9 +128,7 @@
         </div>
 
         <div class="products-grid js-products-grid">
-            <!-- Product 1 -->
           
-            
             
         </div>
     </section>
