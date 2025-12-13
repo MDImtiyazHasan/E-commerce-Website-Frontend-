@@ -1,7 +1,3 @@
-<?php session_start(); 
-$cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0; 
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -47,7 +43,7 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
           <button class="cart-btn" onclick="location.href='cart.php'">
                 <i class="fas fa-shopping-cart"></i>
                 <span>Cart</span>
-                <span class="cart-count"><?= $cart_count ?></span>
+                <span class="cart-count">0</span>
           </button>
 
             <a href="Signin.php" class="signin-btn" >
@@ -132,11 +128,11 @@ $cart_count = isset($_SESSION['cart']) ? count($_SESSION['cart']) : 0;
         </div>
 
         <div class="products-grid js-products-grid">
-          
-            
+            <!-- Products will be loaded here by JavaScript -->
         </div>
     </section>
 
+    <!-- Your existing scripts -->
     <script src="data/homepage.js"></script>
     <script src="scripts/homepage-main.js"></script>
 

@@ -1,24 +1,3 @@
-<?php session_start();
-
-// ——— UPDATE & REMOVE (all inside this file) ———
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id = $_POST['id'] ?? '';
-    $action = $_POST['action'] ?? '';
-
-    if ($id && isset($_SESSION['cart'][$id])) {
-        if ($action === 'remove') {
-            unset($_SESSION['cart'][$id]);
-        } elseif ($action === 'qty') {
-            $change = (int)$_POST['change'];
-            $_SESSION['cart'][$id]['qty'] += $change;
-            if ($_SESSION['cart'][$id]['qty'] <= 0) unset($_SESSION['cart'][$id]);
-        }
-    }
-    echo count($_SESSION['cart'] ?? []);
-    exit;
-}
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,66 +11,142 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 
 <div class="container">
-
-    <!-- Header -->
     <div class="cart-header">
         <a href="homepage.php" class="back-btn">
             <i class="fas fa-arrow-left"></i> Continue Shopping
         </a>
-        <h1>My Cart (<?= count($_SESSION['cart'] ?? []) ?>)</h1>
+        <h1>My Cart (<span id="cartCountHeader">0</span>)</h1>
     </div>
 
     <div class="cart-content">
+        <div class="cart-items" id="cartItemsContainer"></div>
+        <div class="order-summary" id="orderSummary" style="display: none;"></div>
+    </div>
+</div>
 
-        <!-- Cart Items -->
-        <div class="cart-items">
-            <?php if (empty($_SESSION['cart'])): ?>
-                <div class="empty-cart">
-                    <i class="fas fa-shopping-cart empty-icon"></i>
-                    <h3>Your cart is empty</h3>
-                    <p>Looks like you haven't added anything yet.</p>
-                    <a href="homepage.php" class="shop-now-btn">Start Shopping</a>
-                </div>
-            <?php else: ?>
-                <?php foreach ($_SESSION['cart'] as $id => $item): ?>
+<script>
+// Load cart from localStorage
+function getCart() {
+    const cart = localStorage.getItem('novapass_cart');
+    return cart ? JSON.parse(cart) : {};
+}
+
+// Save cart to localStorage
+function saveCart(cart) {
+    localStorage.setItem('novapass_cart', JSON.stringify(cart));
+}
+
+// Get cart count (total quantity of all items)
+function getCartCount(cart) {
+    let totalQty = 0;
+    for (let id in cart) {
+        totalQty += cart[id].qty;
+    }
+    return totalQty;
+}
+
+// Format price
+function formatPrice(price) {
+    return price.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+// Escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Update quantity
+function updateQty(id, change) {
+    let cart = getCart();
+    
+    if (cart[id]) {
+        cart[id].qty += change;
+        
+        if (cart[id].qty <= 0) {
+            delete cart[id];
+        }
+        
+        saveCart(cart);
+        renderCart();
+    }
+}
+
+// Remove item
+function removeItem(id) {
+    if (confirm('Remove this item?')) {
+        let cart = getCart();
+        delete cart[id];
+        saveCart(cart);
+        renderCart();
+    }
+}
+
+// Checkout
+function checkout() {
+    alert('Proceeding to checkout...');
+}
+
+// Render cart
+function renderCart() {
+    const cart = getCart();
+    const cartItemsContainer = document.getElementById('cartItemsContainer');
+    const orderSummary = document.getElementById('orderSummary');
+    const cartCountHeader = document.getElementById('cartCountHeader');
+    
+    const count = getCartCount(cart);
+    cartCountHeader.textContent = count;
+    
+    if (count === 0) {
+        cartItemsContainer.innerHTML = `
+            <div class="empty-cart">
+                <i class="fas fa-shopping-cart empty-icon"></i>
+                <h3>Your cart is empty</h3>
+                <p>Looks like you haven't added anything yet.</p>
+                <a href="homepage.php" class="shop-now-btn">Start Shopping</a>
+            </div>
+        `;
+        orderSummary.style.display = 'none';
+    } else {
+        let itemsHTML = '';
+        let total = 0;
+        
+        for (let id in cart) {
+            const item = cart[id];
+            const itemTotal = item.price * item.qty;
+            total += itemTotal;
+            
+            itemsHTML += `
                 <div class="cart-item">
-                    <img src="<?= $item['image'] ?>" alt="<?= htmlspecialchars($item['name']) ?>">
-
+                    <img src="${item.image}" alt="${escapeHtml(item.name)}">
                     <div class="item-details">
-                        <h3><?= htmlspecialchars($item['name']) ?></h3>
+                        <h3>${escapeHtml(item.name)}</h3>
                         <p class="item-desc">In stock • Ready to ship</p>
-                        <div class="price">$<?= number_format($item['price']) ?></div>
+                        <div class="price">$${formatPrice(item.price)}</div>
                     </div>
-
                     <div class="item-actions">
                         <div class="quantity">
-                            <button class="qty-btn" onclick="updateQty('<?= $id ?>', -1)">−</button>
-                            <input type="number" value="<?= $item['qty'] ?>" readonly>
-                            <button class="qty-btn" onclick="updateQty('<?= $id ?>', 1)">+</button>
+                            <button class="qty-btn" onclick="updateQty('${id}', -1)">−</button>
+                            <input type="number" value="${item.qty}" readonly>
+                            <button class="qty-btn" onclick="updateQty('${id}', 1)">+</button>
                         </div>
-                        <button class="remove-btn" onclick="removeItem('<?= $id ?>')">
+                        <button class="remove-btn" onclick="removeItem('${id}')">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
-
-                    <div class="item-total">
-                        $<?= number_format($item['price'] * $item['qty']) ?>
-                    </div>
+                    <div class="item-total">$${formatPrice(itemTotal)}</div>
                 </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
-        </div>
-
-        <!-- Order Summary -->
-        <?php if (!empty($_SESSION['cart'])): 
-            $total = 0;
-            foreach ($_SESSION['cart'] as $item) $total += $item['price'] * $item['qty'];
-        ?>
-        <div class="order-summary">
+            `;
+        }
+        
+        cartItemsContainer.innerHTML = itemsHTML;
+        
+        orderSummary.innerHTML = `
             <h2>Order Summary</h2>
             <div class="summary-row">
                 <span>Subtotal</span>
-                <span>$<?= number_format($total) ?></span>
+                <span>$${formatPrice(total)}</span>
             </div>
             <div class="summary-row">
                 <span>Shipping</span>
@@ -99,40 +154,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <div class="summary-row total">
                 <span>Total</span>
-                <span class="total-price">$<?= number_format($total) ?></span>
+                <span class="total-price">$${formatPrice(total)}</span>
             </div>
-            <button class="checkout-btn">
+            <button class="checkout-btn" onclick="checkout()">
                 <i class="fas fa-lock"></i> Proceed to Checkout
             </button>
             <div class="secure-note">
                 <i class="fas fa-shield-alt"></i> Secure checkout powered by NovaPass
             </div>
-        </div>
-        <?php endif; ?>
-
-    </div>
-</div>
-
-<script>
-function updateQty(id, change) {
-    fetch('', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'id=' + id + '&action=qty&change=' + change
-    })
-    .then(() => location.reload());
-}
-
-function removeItem(id) {
-    if (confirm('Remove this item?')) {
-        fetch('', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: 'id=' + id + '&action=remove'
-        })
-        .then(() => location.reload());
+        `;
+        orderSummary.style.display = 'block';
     }
 }
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    renderCart();
+});
 </script>
 
 </body>
