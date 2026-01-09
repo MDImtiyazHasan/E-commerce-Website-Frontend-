@@ -1,3 +1,15 @@
+<?php
+session_start();
+
+// Protect staff page - only logged in users can access
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit;
+}
+
+$user_name = $_SESSION['user_name'];
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,6 +52,17 @@
             color: #1B1B1B;
         }
 
+        .staff-info {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
         .view-site-btn {
             background: #F5E7C6;
             color: black;
@@ -53,6 +76,20 @@
         .view-site-btn:hover {
             background: #1B1B1B;
             color: white;
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
         }
 
         .content {
@@ -245,10 +282,18 @@
 
 <div class="container">
     <div class="header">
-        <h1><i class="fas fa-shield-alt"></i> Staff Portal</h1>
-        <a href="homepage.php" class="view-site-btn">
-            <i class="fas fa-home"></i> View Site
-        </a>
+        <div>
+            <h1><i class="fas fa-shield-alt"></i> Staff Portal</h1>
+            <p class="staff-info">Logged in as: <strong><?= htmlspecialchars($user_name) ?></strong></p>
+        </div>
+        <div class="header-right">
+            <a href="homepage.php" class="view-site-btn">
+                <i class="fas fa-home"></i> View Site
+            </a>
+            <a href="logout.php" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
     </div>
 
     <div class="content">

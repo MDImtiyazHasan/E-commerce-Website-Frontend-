@@ -1,3 +1,12 @@
+<?php 
+session_start();
+$is_logged_in = isset($_SESSION['user_id']);
+$user_name = $_SESSION['user_name'] ?? 'Guest';
+?>
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -46,10 +55,24 @@
                 <span class="cart-count">0</span>
           </button>
 
-            <a href="Signin.php" class="signin-btn" >
-                <i class="fas fa-user-circle"></i>
-                <span>Sign in</span>
-            </a>
+            <?php if($is_logged_in): ?>
+                <div class="user-menu">
+                    <button class="signin-btn" onclick="toggleUserMenu()">
+                        <i class="fas fa-user-circle"></i>
+                        <span><?= htmlspecialchars($user_name) ?></span>
+                    </button>
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="profile.php"><i class="fas fa-user"></i> My Profile</a>
+                        <a href="orders.php"><i class="fas fa-box"></i> My Orders</a>
+                        <a href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            <?php else: ?>
+                <a href="login.php" class="signin-btn">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Sign in</span>
+                </a>
+            <?php endif; ?>
         </div>
     </header>
 
@@ -135,6 +158,64 @@
     <!-- Your existing scripts -->
     <script src="data/homepage.js"></script>
     <script src="scripts/homepage-main.js"></script>
+
+     <script>
+    // User menu toggle
+    function toggleUserMenu() {
+        const dropdown = document.getElementById('userDropdown');
+        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        const userMenu = document.querySelector('.user-menu');
+        if (userMenu && !userMenu.contains(e.target)) {
+            document.getElementById('userDropdown').style.display = 'none';
+        }
+    });
+    </script>
+
+    <style>
+    .user-menu {
+        position: relative;
+    }
+
+    .user-dropdown {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        margin-top: 10px;
+        background: white;
+        border: 1px solid #F5E7C6;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        min-width: 200px;
+        z-index: 1000;
+    }
+
+    .user-dropdown a {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 20px;
+        color: #1B1B1B;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+
+    .user-dropdown a:first-child {
+        border-radius: 12px 12px 0 0;
+    }
+
+    .user-dropdown a:last-child {
+        border-radius: 0 0 12px 12px;
+    }
+
+    .user-dropdown a:hover {
+        background: #F5E7C6;
+    }
+    </style>
 
 </body>
 </html>
